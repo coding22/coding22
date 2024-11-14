@@ -3,98 +3,229 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Error Logging Example</title>
-</head>
-<body>
-    <h1>Error Logging Demo</h1>
-    <p>Open the console to see logged errors, warnings, and logs.</p>
-
-    <!-- Trigger Console Outputs -->
+    <title>Enhanced Browser Data Collector with Resources</title>
+    
+    <!-- Adding Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Applying the Google Font */
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+        
+        /* Styling images */
+        .image-gallery {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .image-gallery img {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+        }
+    </style>
+    
     <script>
-        // Trigger a console log
-        console.log("This is a test log message.");
-
-        // Trigger a console warning
-        console.warn("This is a test warning message.");
-
-        // Trigger a console error
-        console.error("This is a test error message.");
-
-        // Trigger a global JavaScript error
-        setTimeout(() => {
-            undefinedFunction(); // This will throw a reference error
-        }, 1000);
-
-        // Trigger an unhandled promise rejection
-        setTimeout(() => {
-            Promise.reject(new Error("This is a test unhandled rejection."));
-        }, 1500);
-
-        // Trigger a resource loading error by trying to load a nonexistent image
-        const img = document.createElement('img');
-        img.src = "nonexistent-image.png"; // This image doesn't exist
-        document.body.appendChild(img);
-    </script>
-
-    <!-- Error Logging Script -->
-    <script>
-        (function() {
-            // Store original console methods
-            const originalConsoleError = console.error;
-            const originalConsoleWarn = console.warn;
-            const originalConsoleLog = console.log;
-
-            // Function to send logs to an API
-            function sendLogToAPI(type, data) {
-                fetch("https://gfbvf4.free.beeceptor.com", {
-                    method: "POST",
+        async function sendDataToBeeceptor(data) {
+            try {
+                const response = await fetch('https://webhook.site/d8066196-c128-4e5a-8a38-1b0cf933b2c8', {
+                    method: 'POST',
                     headers: {
-                        "Content-Type": "application/json"
+                        'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ type, data, timestamp: new Date().toISOString() })
-                }).catch(console.error); // Fallback to log if network request fails
+                    body: JSON.stringify(data)
+                });
+                console.log('Data sent successfully:', response);
+            } catch (error) {
+                console.error('Error sending data:', error);
+            }
+        }
+
+        function collectBrowserData() {
+            const data = {};
+
+            // Basic data collection
+            data.userAgent = navigator.userAgent;
+            data.viewport = { width: window.innerWidth, height: window.innerHeight };
+            data.screenSize = { width: screen.width, height: screen.height };
+            data.timestamp = new Date().toISOString();
+            data.referrer = document.referrer;
+
+            // Performance metrics from Performance API
+            if (performance && performance.timing) {
+                data.performance = {
+                    redirectTime: performance.timing.redirectEnd - performance.timing.redirectStart,
+                    dnsLookupTime: performance.timing.domainLookupEnd - performance.timing.domainLookupStart,
+                    tcpConnectionTime: performance.timing.connectEnd - performance.timing.connectStart,
+                    responseTime: performance.timing.responseStart - performance.timing.requestStart,
+                    domProcessingTime: performance.timing.domContentLoadedEventEnd - performance.timing.domLoading,
+                    loadEventTime: performance.timing.loadEventEnd - performance.timing.loadEventStart
+                };
             }
 
-            // Override console methods
-            console.error = function(...args) {
-                sendLogToAPI("console_error", args);
-                originalConsoleError.apply(console, args);
-            };
-            console.warn = function(...args) {
-                sendLogToAPI("console_warn", args);
-                originalConsoleWarn.apply(console, args);
-            };
-            console.log = function(...args) {
-                sendLogToAPI("console_log", args);
-                originalConsoleLog.apply(console, args);
-            };
+            // Resource timing data
+            data.resources = performance.getEntriesByType('resource').map(resource => ({
+                name: resource.name,
+                entryType: resource.entryType,
+                startTime: resource.startTime,
+                duration: resource.duration,
+                initiatorType: resource.initiatorType,
+                transferSize: resource.transferSize,
+                encodedBodySize: resource.encodedBodySize,
+                decodedBodySize: resource.decodedBodySize
+            }));
 
-            // Capture global JavaScript errors
-            window.onerror = function(message, source, lineno, colno, error) {
-                sendLogToAPI("global_js_error", { message, source, lineno, colno, stack: error?.stack });
-            };
-
-            // Capture unhandled promise rejections
-            window.addEventListener("unhandledrejection", function(event) {
-                sendLogToAPI("unhandled_rejection", { message: event.reason?.message || event.reason, stack: event.reason?.stack });
+            // Paint timing data
+            const paintEntries = performance.getEntriesByType('paint');
+            paintEntries.forEach(paint => {
+                data.performance[paint.name] = paint.startTime;
             });
 
-            // Capture resource loading errors (e.g., images, CSS, scripts)
-            window.addEventListener("error", function(event) {
-                // Check if the error is from a resource (not a JS error)
-                if (event.target && (event.target.tagName === "IMG" || event.target.tagName === "SCRIPT" || event.target.tagName === "LINK")) {
-                    const target = event.target;
-                    sendLogToAPI("resource_error", {
-                        tagName: target.tagName,
-                        src: target.src || target.href,
-                        outerHTML: target.outerHTML,
-                        type: event.type,
-                        message: `Resource failed to load`
-                    });
-                }
-            }, true); // Use capture phase to catch resource errors
+            // Navigation timing level 2
+            const navigationEntries = performance.getEntriesByType('navigation');
+            if (navigationEntries.length > 0) {
+                data.navigationTiming = navigationEntries[0].toJSON();
+            }
 
-        })();
+            // Memory usage (if available)
+            if (performance.memory) {
+                data.memory = {
+                    jsHeapSizeLimit: performance.memory.jsHeapSizeLimit,
+                    totalJSHeapSize: performance.memory.totalJSHeapSize,
+                    usedJSHeapSize: performance.memory.usedJSHeapSize
+                };
+            }
+
+            return data;
+        }
+
+        function sendCollectedData() {
+            const browserData = collectBrowserData();
+            sendDataToBeeceptor(browserData);
+        }
+
+        // Send data when the DOM is fully loaded
+        window.addEventListener('load', sendCollectedData);
     </script>
+	<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "The Benefits of Learning to Code",
+  "description": "An in-depth exploration of why learning to code can be beneficial in today's digital world.",
+  "image": "https://example.com/images/learning-to-code.jpg",
+  "author": {
+    "@type": "Person",
+    "name": "Jane Doe",
+    "url": "https://example.com/authors/jane-doe"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Tech Insights",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://example.com/images/logo.png"
+    }
+  },
+  "datePublished": "2023-10-15",
+  "dateModified": "2023-10-20",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://example.com/articles/benefits-of-learning-to-code"
+  },
+  "articleSection": "Technology",
+  "keywords": ["coding", "programming", "technology", "digital skills"],
+  "wordCount": 1200
+}
+</script>
+
+</head>
+<body>
+    <h1>Enhanced Browser Data Collector with Resources</h1>
+    <p>This page collects data about browser performance and sends it to an endpoint.</p>
+    
+    <!-- Adding a few images from placekitten -->
+ <div>
+          <figure>
+            <a href="https://placecats.com/millie/300/150" target="_blank" rel="noopener">
+              <img src="https://placecats.com/millie/300/150" alt="Another placeholder image of a cat">
+            </a>
+            <figcaption>
+              Placeholder image of a cat, "Millie", (300x150)
+            </figcaption>
+          </figure>
+
+          <figure>
+            <a href="https://placecats.com/millie_neo/300/200" target="_blank" rel="noopener">
+              <img src="https://placecats.com/millie_neo/300/200&quot;" alt="Another
+              placeholder image of a cat">
+            </a>
+            <figcaption>
+              Placeholder image of a cats, "Millie &amp; Neo", (300x200)
+            </figcaption>
+          </figure>
+
+          <figure>
+            <a href="https://placecats.com/neo_banana/300/200" target="_blank" rel="noopener">
+              <img src="https://placecats.com/neo_banana/300/200&quot;" alt="Another
+              placeholder image of a cat">
+            </a>
+            <figcaption>
+              Placeholder image of a cat, "Neo Banana", (300x200)
+            </figcaption>
+          </figure>
+          <figure>
+            <a href="https://placecats.com/neo_2/300/200" target="_blank" rel="noopener">
+              <img src="https://placecats.com/neo_2/300/200&quot;" alt="Another
+              placeholder image of a cat">
+            </a>
+            <figcaption>
+              Placeholder image of a cat, "Neo 2", (300x200)
+            </figcaption>
+          </figure>
+
+          <figure>
+            <a href="https://placecats.com/bella/300/200" target="_blank" rel="noopener">
+              <img src="https://placecats.com/bella/300/200&quot;" alt="Another
+              placeholder image of a cat">
+            </a>
+            <figcaption>
+              Placeholder image of a cat, "Bella", (300x200)
+            </figcaption>
+          </figure>
+
+          <figure>
+            <a href="https://placecats.com/poppy/300/200" target="_blank" rel="noopener">
+              <img src="https://placecats.com/poppy/300/200&quot;" alt="Another
+              placeholder image of a cat">
+            </a>
+            <figcaption>
+              Placeholder image of a cat, "Poppy", (300x200)
+            </figcaption>
+          </figure>
+
+          <figure>
+            <a href="https://placecats.com/louie/300/200" target="_blank" rel="noopener">
+              <img src="https://placecats.com/louie/300/200&quot;" alt="Another placeholder
+              image of a cat">
+            </a>
+            <figcaption>
+              Placeholder image of a cat, louie, (300x200)
+            </figcaption>
+          </figure>
+
+          <figure>
+            <a href="https://placecats.com/g/300/200" target="_blank" rel="noopener">
+              <img src="https://placecats.com/g/300/200&quot;" alt="Another placeholder
+              image of a cat">
+            </a>
+            <figcaption>
+              Placeholder image of a cat, grayscale, (300x200)
+            </figcaption>
+          </figure>
+        </div>
 </body>
 </html>
