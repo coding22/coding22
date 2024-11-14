@@ -49,8 +49,9 @@
 
             // Basic data collection
             data.userAgent = navigator.userAgent;
-            data.viewport = { width: window.innerWidth, height: window.innerHeight };
+            data.innerwidthhandheight = { width: window.innerWidth, height: window.innerHeight };
             data.screenSize = { width: screen.width, height: screen.height };
+			data.windowScreenSize = { width: window.screen.width, height: window.screen.height };
             data.timestamp = new Date().toISOString();
             data.referrer = document.referrer;
 
