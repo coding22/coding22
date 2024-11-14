@@ -50,7 +50,8 @@
             // Basic data collection
             data.userAgent = navigator.userAgent;
             data.viewport = { width: window.innerWidth, height: window.innerHeight };
-            data.screenSize = { width: screen.width, height: screen.height };
+            data.screenSize = { width: window.screen.width, height: window.screen.height };
+            data.effectiveScreenWidth = window.screen.width * window.devicePixelRatio; // Account for high-DPI screens
             data.timestamp = new Date().toISOString();
             data.referrer = document.referrer;
 
@@ -110,6 +111,7 @@
         // Send data when the DOM is fully loaded
         window.addEventListener('load', sendCollectedData);
     </script>
+
 	<script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -147,85 +149,63 @@
     <h1>Enhanced Browser Data Collector with Resources</h1>
     <p>This page collects data about browser performance and sends it to an endpoint.</p>
     
-    <!-- Adding a few images from placekitten -->
- <div>
-          <figure>
+    <!-- Adding a few images with native lazy loading -->
+    <div class="image-gallery">
+        <figure>
             <a href="https://placecats.com/millie/300/150" target="_blank" rel="noopener">
-              <img src="https://placecats.com/millie/300/150" alt="Another placeholder image of a cat">
+                <img src="https://placecats.com/millie/300/150" alt="Placeholder image of a cat, Millie" loading="lazy">
             </a>
-            <figcaption>
-              Placeholder image of a cat, "Millie", (300x150)
-            </figcaption>
-          </figure>
-
-          <figure>
+            <figcaption>Placeholder image of a cat, "Millie" (300x150)</figcaption>
+        </figure>
+        
+        <figure>
             <a href="https://placecats.com/millie_neo/300/200" target="_blank" rel="noopener">
-              <img src="https://placecats.com/millie_neo/300/200&quot;" alt="Another
-              placeholder image of a cat">
+                <img src="https://placecats.com/millie_neo/300/200" alt="Placeholder image of cats, Millie & Neo" loading="lazy">
             </a>
-            <figcaption>
-              Placeholder image of a cats, "Millie &amp; Neo", (300x200)
-            </figcaption>
-          </figure>
-
-          <figure>
+            <figcaption>Placeholder image of cats, "Millie & Neo" (300x200)</figcaption>
+        </figure>
+        
+        <figure>
             <a href="https://placecats.com/neo_banana/300/200" target="_blank" rel="noopener">
-              <img src="https://placecats.com/neo_banana/300/200&quot;" alt="Another
-              placeholder image of a cat">
+                <img src="https://placecats.com/neo_banana/300/200" alt="Placeholder image of a cat, Neo Banana" loading="lazy">
             </a>
-            <figcaption>
-              Placeholder image of a cat, "Neo Banana", (300x200)
-            </figcaption>
-          </figure>
-          <figure>
+            <figcaption>Placeholder image of a cat, "Neo Banana" (300x200)</figcaption>
+        </figure>
+        
+        <figure>
             <a href="https://placecats.com/neo_2/300/200" target="_blank" rel="noopener">
-              <img src="https://placecats.com/neo_2/300/200&quot;" alt="Another
-              placeholder image of a cat">
+                <img src="https://placecats.com/neo_2/300/200" alt="Placeholder image of a cat, Neo 2" loading="lazy">
             </a>
-            <figcaption>
-              Placeholder image of a cat, "Neo 2", (300x200)
-            </figcaption>
-          </figure>
-
-          <figure>
+            <figcaption>Placeholder image of a cat, "Neo 2" (300x200)</figcaption>
+        </figure>
+        
+        <figure>
             <a href="https://placecats.com/bella/300/200" target="_blank" rel="noopener">
-              <img src="https://placecats.com/bella/300/200&quot;" alt="Another
-              placeholder image of a cat">
+                <img src="https://placecats.com/bella/300/200" alt="Placeholder image of a cat, Bella" loading="lazy">
             </a>
-            <figcaption>
-              Placeholder image of a cat, "Bella", (300x200)
-            </figcaption>
-          </figure>
-
-          <figure>
+            <figcaption>Placeholder image of a cat, "Bella" (300x200)</figcaption>
+        </figure>
+        
+        <figure>
             <a href="https://placecats.com/poppy/300/200" target="_blank" rel="noopener">
-              <img src="https://placecats.com/poppy/300/200&quot;" alt="Another
-              placeholder image of a cat">
+                <img src="https://placecats.com/poppy/300/200" alt="Placeholder image of a cat, Poppy" loading="lazy">
             </a>
-            <figcaption>
-              Placeholder image of a cat, "Poppy", (300x200)
-            </figcaption>
-          </figure>
-
-          <figure>
+            <figcaption>Placeholder image of a cat, "Poppy" (300x200)</figcaption>
+        </figure>
+        
+        <figure>
             <a href="https://placecats.com/louie/300/200" target="_blank" rel="noopener">
-              <img src="https://placecats.com/louie/300/200&quot;" alt="Another placeholder
-              image of a cat">
+                <img src="https://placecats.com/louie/300/200" alt="Placeholder image of a cat, Louie" loading="lazy">
             </a>
-            <figcaption>
-              Placeholder image of a cat, louie, (300x200)
-            </figcaption>
-          </figure>
-
-          <figure>
+            <figcaption>Placeholder image of a cat, "Louie" (300x200)</figcaption>
+        </figure>
+        
+        <figure>
             <a href="https://placecats.com/g/300/200" target="_blank" rel="noopener">
-              <img src="https://placecats.com/g/300/200&quot;" alt="Another placeholder
-              image of a cat">
+                <img src="https://placecats.com/g/300/200" alt="Placeholder image of a grayscale cat" loading="lazy">
             </a>
-            <figcaption>
-              Placeholder image of a cat, grayscale, (300x200)
-            </figcaption>
-          </figure>
-        </div>
+            <figcaption>Placeholder image of a cat, grayscale (300x200)</figcaption>
+        </figure>
+    </div>
 </body>
 </html>
