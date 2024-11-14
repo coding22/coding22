@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error Logging Example</title>
+</head>
+<body>
+    <h1>Error Logging Demo</h1>
+    <p>Open the console to see logged errors, warnings, and logs.</p>
+
+    <!-- Trigger Console Outputs -->
+    <script>
+        // Trigger a console log
+        console.log("This is a test log message.");
+
+        // Trigger a console warning
+        console.warn("This is a test warning message.");
+
+        // Trigger a console error
+        console.error("This is a test error message.");
+
+        // Trigger a global JavaScript error
+        setTimeout(() => {
+            undefinedFunction(); // This will throw a reference error
+        }, 1000);
+
+        // Trigger an unhandled promise rejection
+        setTimeout(() => {
+            Promise.reject(new Error("This is a test unhandled rejection."));
+        }, 1500);
+
+        // Trigger a resource loading error by trying to load a nonexistent image
+        const img = document.createElement('img');
+        img.src = "nonexistent-image.png"; // This image doesn't exist
+        document.body.appendChild(img);
+    </script>
+
+    <!-- Error Logging Script -->
+    <script>
+        (function() {
+            // Store original console methods
+            const originalConsoleError = console.error;
+            const originalConsoleWarn = console.warn;
+            const originalConsoleLog = console.log;
+
+            // Function to send logs to an API
+            function sendLogToAPI(type, data) {
+                fetch("https://gfbvf4.free.beeceptor.com", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ type, data, timestamp: new Date().toISOString() })
+                }).catch(console.error); // Fallback to log if network request fails
+            }
+
+            // Override console methods
+            console.error = function(...args) {
+                sendLogToAPI("console_error", args);
+                originalConsoleError.apply(console, args);
+            };
+            console.warn = function(...args) {
+                sendLogToAPI("console_warn", args);
+                originalConsoleWarn.apply(console, args);
+            };
+            console.log = function(...args) {
+                sendLogToAPI("console_log", args);
+                originalConsoleLog.apply(console, args);
+            };
+
+            // Capture global JavaScript errors
+            window.onerror = function(message, source, lineno, colno, error) {
+                sendLogToAPI("global_js_error", { message, source, lineno, colno, stack: error?.stack });
+            };
+
+            // Capture unhandled promise rejections
+            window.addEventListener("unhandledrejection", function(event) {
+                sendLogToAPI("unhandled_rejection", { message: event.reason?.message || event.reason, stack: event.reason?.stack });
+            });
+
+            // Capture resource loading errors (e.g., images, CSS, scripts)
+            window.addEventListener("error", function(event) {
+                // Check if the error is from a resource (not a JS error)
+                if (event.target && (event.target.tagName === "IMG" || event.target.tagName === "SCRIPT" || event.target.tagName === "LINK")) {
+                    const target = event.target;
+                    sendLogToAPI("resource_error", {
+                        tagName: target.tagName,
+                        src: target.src || target.href,
+                        outerHTML: target.outerHTML,
+                        type: event.type,
+                        message: `Resource failed to load`
+                    });
+                }
+            }, true); // Use capture phase to catch resource errors
+
+        })();
+    </script>
+</body>
+</html>
